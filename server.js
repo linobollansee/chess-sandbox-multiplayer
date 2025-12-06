@@ -163,7 +163,8 @@ let boardState;
 
 // WebSocket connection
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  const userIP = socket.handshake.address;
+  console.log("User connected:", socket.id, "IP:", userIP);
 
   // Send current board state to new user
   socket.emit("boardState", boardState);
@@ -221,7 +222,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+    const userIP = socket.handshake.address;
+    console.log("User disconnected:", socket.id, "IP:", userIP);
     // Broadcast updated user count
     io.emit("userCount", io.engine.clientsCount);
   });
