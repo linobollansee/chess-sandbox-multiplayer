@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chess Sandbox - Multiplayer</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="board-container">
+        <div id="chessboard" class="chessboard"></div>
+        <div id="offboard" class="offboard">
+          <h3>Chess Pieces</h3>
+          <div id="piece-palette"></div>
+          <h3 class="section-divider">Special Pieces</h3>
+          <div id="aquatic-palette"></div>
+        </div>
+      </div>
+
+      <div class="status">
+        <button id="reset-btn" class="reset-button">Reset Board</button>
+        <span id="user-count">0 users connected</span>
+      </div>
+    </div>
+
+    <div id="reset-modal" class="modal">
+      <div class="modal-content">
+        <h2>Reset Board?</h2>
+        <p>This will reset the board for all connected users.</p>
+        <div class="modal-buttons">
+          <button id="confirm-reset" class="modal-btn confirm-btn">
+            Reset
+          </button>
+          <button id="cancel-reset" class="modal-btn cancel-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
