@@ -42,6 +42,11 @@ const pieceSymbols = {
 let boardState = { pieces: [] };
 let draggedPiece = null;
 let selectedPiece = null; // For click-to-move on mobile
+let touchDraggedElement = null;
+let touchStartPos = { x: 0, y: 0 };
+let touchMoved = false;
+let touchStartTime = 0;
+let longPressTimer = null;
 
 // Disable context menu globally
 document.addEventListener("contextmenu", (e) => {
@@ -112,6 +117,13 @@ function initPalette() {
 
       pieceEl.addEventListener("dragstart", handlePaletteDragStart);
       pieceEl.addEventListener("dragend", handleDragEnd);
+      pieceEl.addEventListener("touchstart", handlePaletteTouchStart, {
+        passive: false,
+      });
+      pieceEl.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
+      pieceEl.addEventListener("touchend", handleTouchEnd, { passive: false });
 
       row.appendChild(pieceEl);
     });
@@ -161,6 +173,11 @@ function initAquaticPalette() {
 
     pieceEl.addEventListener("dragstart", handlePaletteDragStart);
     pieceEl.addEventListener("dragend", handleDragEnd);
+    pieceEl.addEventListener("touchstart", handlePaletteTouchStart, {
+      passive: false,
+    });
+    pieceEl.addEventListener("touchmove", handleTouchMove, { passive: false });
+    pieceEl.addEventListener("touchend", handleTouchEnd, { passive: false });
 
     scaryRow.appendChild(pieceEl);
   });
@@ -182,6 +199,11 @@ function initAquaticPalette() {
 
     pieceEl.addEventListener("dragstart", handlePaletteDragStart);
     pieceEl.addEventListener("dragend", handleDragEnd);
+    pieceEl.addEventListener("touchstart", handlePaletteTouchStart, {
+      passive: false,
+    });
+    pieceEl.addEventListener("touchmove", handleTouchMove, { passive: false });
+    pieceEl.addEventListener("touchend", handleTouchEnd, { passive: false });
 
     friendlyRow.appendChild(pieceEl);
   });
@@ -211,6 +233,9 @@ function renderPiece(piece) {
   pieceEl.addEventListener("dragend", handleDragEnd);
   pieceEl.addEventListener("contextmenu", handleRightClick);
   pieceEl.addEventListener("click", handlePieceClick);
+  pieceEl.addEventListener("touchstart", handleTouchStart, { passive: false });
+  pieceEl.addEventListener("touchmove", handleTouchMove, { passive: false });
+  pieceEl.addEventListener("touchend", handleTouchEnd, { passive: false });
 
   square.appendChild(pieceEl);
 }
@@ -364,7 +389,144 @@ function handleSquareClick(e) {
     .forEach((p) => p.classList.remove("selected"));
 }
 
-// Socket event handlers
+// Touch event handlers for mobile
+function handleTouchStart(e) {
+  const touch = e.touches[0];
+  touchStartPos = { x: touch.clientX, y: touch.clientY };
+  touchStartTime = Date.now();
+  touchMoved = false;
+  touchDraggedElement = e.target;
+  draggedPiece = e.target.dataset.id;
+
+  // Set up long press for deletion (only for board pieces, not palette)
+  if (!e.target.classList.contains("palette-piece")) {
+    longPressTimer = setTimeout(() => {
+      if (!touchMoved && touchDraggedElement) {
+        // Long press detected - remove piece
+        const pieceId = touchDraggedElement.dataset.id;
+        if (pieceId && confirm("Delete this piece?")) {
+          socket.emit("removePiece", pieceId);
+        }
+        touchDraggedElement = null;
+        draggedPiece = null;
+      }
+    }, 500); // 500ms for long press
+  }
+}
+
+function handlePaletteTouchStart(e) {
+  const touch = e.touches[0];
+  touchStartPos = { x: touch.clientX, y: touch.clientY };
+  touchStartTime = Date.now();
+  touchMoved = false;
+  touchDraggedElement = e.target;
+  draggedPiece = null; // Palette piece, not an existing board piece
+}
+
+function handleTouchMove(e) {
+  if (!touchDraggedElement) return;
+
+  const touch = e.touches[0];
+  const deltaX = Math.abs(touch.clientX - touchStartPos.x);
+  const deltaY = Math.abs(touch.clientY - touchStartPos.y);
+
+  // Only start dragging if moved more than 10px
+  if (deltaX > 10 || deltaY > 10) {
+    touchMoved = true;
+
+    // Cancel long press if user starts dragging
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+
+    e.preventDefault(); // Prevent scrolling only when actually dragging
+
+    touchDraggedElement.style.opacity = "0.5";
+    touchDraggedElement.style.zIndex = "1000";
+    touchDraggedElement.style.position = "fixed";
+    touchDraggedElement.style.left =
+      touch.clientX - touchDraggedElement.offsetWidth / 2 + "px";
+    touchDraggedElement.style.top =
+      touch.clientY - touchDraggedElement.offsetHeight / 2 + "px";
+    touchDraggedElement.style.pointerEvents = "none";
+  }
+}
+
+function handleTouchEnd(e) {
+  // Clear long press timer
+  if (longPressTimer) {
+    clearTimeout(longPressTimer);
+    longPressTimer = null;
+  }
+
+  if (!touchDraggedElement) return;
+
+  const touchDuration = Date.now() - touchStartTime;
+
+  // If it was a quick tap (less than 200ms) and didn't move much, treat as click
+  if (!touchMoved && touchDuration < 200) {
+    // Reset and let the click handler deal with it
+    touchDraggedElement = null;
+    draggedPiece = null;
+    touchMoved = false;
+    return;
+  }
+
+  e.preventDefault();
+
+  const touch = e.changedTouches[0];
+  const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+
+  // Reset styles
+  touchDraggedElement.style.opacity = "1";
+  touchDraggedElement.style.zIndex = "";
+  touchDraggedElement.style.position = "";
+  touchDraggedElement.style.left = "";
+  touchDraggedElement.style.top = "";
+  touchDraggedElement.style.pointerEvents = "";
+
+  // Find the target square
+  const targetSquare = targetElement?.classList.contains("square")
+    ? targetElement
+    : targetElement?.closest(".square");
+
+  if (targetSquare && touchMoved) {
+    const newPosition = targetSquare.dataset.position;
+
+    // Check if dragging from palette
+    if (
+      draggedPiece === null &&
+      touchDraggedElement.classList.contains("palette-piece")
+    ) {
+      const type = touchDraggedElement.dataset.type;
+      const color = touchDraggedElement.dataset.color;
+
+      // Check if square is occupied
+      const existingPiece = boardState.pieces.find(
+        (p) => p.position === newPosition
+      );
+
+      if (!existingPiece) {
+        socket.emit("createPiece", { type, color, position: newPosition });
+      }
+    } else if (draggedPiece) {
+      // Moving existing piece
+      const existingPiece = boardState.pieces.find(
+        (p) => p.position === newPosition && p.id !== draggedPiece
+      );
+
+      if (!existingPiece) {
+        socket.emit("movePiece", { pieceId: draggedPiece, newPosition });
+      }
+    }
+  }
+
+  // Reset
+  touchDraggedElement = null;
+  draggedPiece = null;
+  touchMoved = false;
+} // Socket event handlers
 socket.on("userCount", (count) => {
   const userCountEl = document.getElementById("user-count");
   userCountEl.textContent = `${count} user${count !== 1 ? "s" : ""} connected`;
