@@ -163,7 +163,9 @@ let boardState;
 
 // WebSocket connection
 io.on("connection", (socket) => {
-  const userIP = socket.handshake.address;
+  const userIP =
+    socket.handshake.headers["x-forwarded-for"]?.split(",")[0] ||
+    socket.handshake.address;
   console.log("User connected:", socket.id, "IP:", userIP);
 
   // Send current board state to new user
@@ -222,7 +224,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    const userIP = socket.handshake.address;
+    const userIP =
+      socket.handshake.headers["x-forwarded-for"]?.split(",")[0] ||
+      socket.handshake.address;
     console.log("User disconnected:", socket.id, "IP:", userIP);
     // Broadcast updated user count
     io.emit("userCount", io.engine.clientsCount);
