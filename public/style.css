@@ -1,537 +1,870 @@
+/* Universal selector targeting all HTML elements on the page */
 * {
+  /* Remove default margin from all elements for consistent spacing */
   margin: 0;
+  /* Remove default padding from all elements for consistent spacing */
   padding: 0;
+  /* Set box-sizing to border-box so padding and border are included in element's total width/height */
   box-sizing: border-box;
+  /* Disable text selection for users (prevents highlighting text when dragging pieces) */
   user-select: none;
+  /* Disable text selection on WebKit browsers (Safari, older Chrome) */
   -webkit-user-select: none;
+  /* Disable text selection on Firefox */
   -moz-user-select: none;
+  /* Disable text selection on Internet Explorer/Edge */
   -ms-user-select: none;
 }
 
+/* Style rules for the body element (main container for page content) */
 body {
+  /* Set font family with fallbacks for cross-platform compatibility */
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  /* Create purple gradient background from top-left to bottom-right */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Set minimum height to full viewport height to fill screen */
   min-height: 100vh;
+  /* Use flexbox for centering content */
   display: flex;
+  /* Center content horizontally */
   justify-content: center;
+  /* Center content vertically */
   align-items: center;
+  /* Remove padding from body */
   padding: 0;
+  /* Remove margin from body */
   margin: 0;
+  /* Hide scrollbars when content overflows */
   overflow: hidden;
+  /* Set width to full viewport width */
   width: 100vw;
+  /* Set height to full viewport height */
   height: 100vh;
 }
 
+/* Style rules for the main container div */
 .container {
+  /* Use flexbox for layout management */
   display: flex;
+  /* Stack children vertically (column direction) */
   flex-direction: column;
+  /* Set height to full viewport height */
   height: 100vh;
+  /* Set width to full viewport width */
   width: 100vw;
+  /* Remove padding from container */
   padding: 0;
+  /* Remove gap between flexbox children */
   gap: 0;
 }
 
+/* Style rules for h1 heading elements */
 h1 {
+  /* Center text horizontally */
   text-align: center;
+  /* Set text color to dark gray */
   color: #333;
+  /* Add 10px margin below the heading */
   margin-bottom: 10px;
+  /* Set font size to 2.5 times the default size */
   font-size: 2.5em;
 }
 
+/* Style rules for subtitle class elements */
 .subtitle {
+  /* Center text horizontally */
   text-align: center;
+  /* Set text color to medium gray */
   color: #666;
+  /* Add 20px margin below the subtitle */
   margin-bottom: 20px;
+  /* Set font size to 90% of default size */
   font-size: 0.9em;
 }
 
+/* Style rules for the board container that holds chessboard and side panel */
 .board-container {
+  /* Use flexbox for layout management */
   display: flex;
+  /* Stack children vertically by default (mobile-first) */
   flex-direction: column;
+  /* Add 10px gap between flexbox children */
   gap: 10px;
+  /* Center content horizontally */
   justify-content: center;
+  /* Center content vertically */
   align-items: center;
+  /* Allow this element to grow and fill available space */
   flex: 1;
+  /* Set minimum height to 0 to enable proper flexbox shrinking */
   min-height: 0;
+  /* Set width to 100% of parent */
   width: 100%;
+  /* Set height to 100% of parent */
   height: 100%;
+  /* Set positioning context for absolutely positioned children */
   position: relative;
 }
 
+/* Style rules for the chessboard grid */
 .chessboard {
+  /* Use CSS Grid for creating the 8x8 board layout */
   display: grid;
+  /* Create 8 equal-width columns */
   grid-template-columns: repeat(8, 1fr);
+  /* Create 8 equal-height rows */
   grid-template-rows: repeat(8, 1fr);
+  /* Remove border from chessboard */
   border: none;
+  /* Remove box shadow from chessboard */
   box-shadow: none;
+  /* Prevent board from shrinking below its size */
   flex-shrink: 0;
+  /* Set width using min() to choose smaller of viewport-based calculations */
+  /* Subtracts 250px from viewport height or 20px from viewport width for padding */
   width: min(calc(100vh - 250px), calc(100vw - 20px));
+  /* Set height equal to width for square board */
   height: min(calc(100vh - 250px), calc(100vw - 20px));
+  /* Use SVG background image for chessboard pattern */
   background-image: url("/images/chessboard.svg");
+  /* Scale background to cover entire element */
   background-size: cover;
+  /* Center background image */
   background-position: center;
+  /* Hide any content that overflows the board boundaries */
   overflow: hidden;
 }
 
+/* Style rules for individual square divs on the chessboard */
 .square {
+  /* Set width to 100% of grid cell */
   width: 100%;
+  /* Set height to 100% of grid cell */
   height: 100%;
+  /* Use flexbox for centering piece within square */
   display: flex;
+  /* Center content horizontally */
   align-items: center;
+  /* Center content vertically */
   justify-content: center;
+  /* Set positioning context for absolutely positioned pieces */
   position: relative;
+  /* Hide content that overflows square boundaries */
   overflow: hidden;
 }
 
+/* Style rules for light-colored squares */
 .square.light {
+  /* Set background to transparent (pattern comes from parent background image) */
   background-color: transparent;
 }
 
+/* Style rules for dark-colored squares */
 .square.dark {
+  /* Set background to transparent (pattern comes from parent background image) */
   background-color: transparent;
 }
 
+/* Style rules for chess piece elements */
 .piece {
+  /* Show pointer cursor when hovering over pieces */
   cursor: pointer;
+  /* Disable text selection on pieces */
   user-select: none;
+  /* Set width to 100% of square */
   width: 100%;
+  /* Set height to 100% of square */
   height: 100%;
+  /* Use flexbox for centering piece image */
   display: flex;
+  /* Center content vertically */
   align-items: center;
+  /* Center content horizontally */
   justify-content: center;
+  /* Remove extra line-height spacing */
   line-height: 1;
+  /* Position absolutely within square for precise placement */
   position: absolute;
+  /* Align to top of square */
   top: 0;
+  /* Align to left of square */
   left: 0;
+  /* Disable dragging behavior on WebKit browsers */
   -webkit-user-drag: none;
+  /* Allow pointer events on pieces (clickable/touchable) */
   pointer-events: auto;
 }
 
+/* Style rules for img elements inside pieces */
 .piece img {
-  width: 95%;
-  height: 95%;
+  /* Set image width to 99% of piece container (slight margin) */
+  width: 99%;
+  /* Set image height to 99% of piece container (slight margin) */
+  height: 99%;
+  /* Add drop shadow effect for depth perception */
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  /* Disable pointer events on images (events handled by parent piece element) */
   pointer-events: none;
 }
 
+/* Style rules for pieces while being actively pressed/clicked */
 .piece:active {
+  /* Maintain pointer cursor during active state */
   cursor: pointer;
 }
 
+/* Style rules for selected pieces */
 .piece.selected {
+  /* Add semi-transparent purple background to highlight selection */
   background: rgba(102, 126, 234, 0.5);
+  /* Round corners slightly */
   border-radius: 4px;
+  /* Add inset box shadow to create selection border effect */
   box-shadow: inset 0 0 0 3px #667eea;
 }
 
+/* Style rules for ghost pieces (preview pieces on hover) */
 .piece.ghost-piece {
+  /* Set opacity to 50% to show this is a preview */
   opacity: 0.5;
+  /* Disable pointer events so ghost doesn't interfere with clicks */
   pointer-events: none;
 }
 
+/* Style rules for SVG elements inside ghost pieces */
 .piece.ghost-piece svg {
+  /* Add subtle drop shadow to ghost pieces */
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
+/* Style rules for special piece types */
 .piece.special {
+  /* Set font size using min() to choose smallest of multiple calculations */
   font-size: min(calc((100vh - 100px) / 8), calc((100vw - 40px) / 8), 48px);
 }
 
+/* Style rules for the offboard panel (piece palette and controls) */
 .offboard {
+  /* Semi-transparent white background with high opacity */
   background: rgba(255, 255, 255, 0.95);
+  /* Light gray border */
   border: 2px solid #ddd;
+  /* Rounded corners */
   border-radius: 10px;
+  /* Internal padding */
   padding: 15px;
+  /* Set width with padding subtracted from viewport width */
   width: calc(100vw - 40px);
+  /* Maximum width constraint */
   max-width: 600px;
+  /* Maximum height constraint */
   max-height: 300px;
+  /* Enable vertical scrolling when content overflows */
   overflow-y: auto;
+  /* Prevent element from shrinking */
   flex-shrink: 0;
+  /* Apply backdrop blur effect for frosted glass appearance */
   backdrop-filter: blur(10px);
+  /* Use static positioning (default) */
   position: static;
+  /* Remove any transforms */
   transform: none;
+  /* Set stacking order */
   z-index: 10;
 }
 
+/* Style rules for h3 headings inside offboard panel */
 .offboard h3 {
+  /* Dark gray text color */
   color: #333;
+  /* Space below heading */
   margin-bottom: 15px;
+  /* Slightly larger than default font */
   font-size: 1.1em;
+  /* Center text horizontally */
   text-align: center;
 }
 
+/* Style rules for h3 headings that act as section dividers */
 .offboard h3.section-divider {
+  /* Add extra space above section dividers */
   margin-top: 30px;
 }
 
+/* Style rules for the piece palette container */
 #piece-palette {
+  /* Use flexbox for layout */
   display: flex;
+  /* Stack rows vertically */
   flex-direction: column;
+  /* No gap between rows */
   gap: 0;
+  /* Center content horizontally */
   justify-content: center;
 }
 
-#aquatic-palette {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  justify-content: center;
-}
-
+/* Style rules for rows of pieces in the palette */
 .piece-row {
+  /* Use flexbox for horizontal layout */
   display: flex;
+  /* Prevent wrapping to new line */
   flex-wrap: nowrap;
+  /* No gap between pieces */
   gap: 0;
+  /* Center pieces horizontally */
   justify-content: center;
 }
 
+/* Style rules for individual palette pieces */
 .palette-piece {
+  /* White background */
   background: white;
+  /* Light gray border */
   border: 2px solid #ddd;
+  /* Rounded corners */
   border-radius: 8px;
+  /* Internal padding */
   padding: 5px;
+  /* Grab cursor to indicate draggable */
   cursor: grab;
+  /* Fixed width */
   width: 48px;
+  /* Fixed height (square) */
   height: 48px;
+  /* Use flexbox for centering image */
   display: flex;
+  /* Center content vertically */
   align-items: center;
+  /* Center content horizontally */
   justify-content: center;
+  /* Prevent shrinking below fixed size */
   flex-shrink: 0;
+  /* Set positioning context */
   position: relative;
 }
 
+/* Style rules for selected palette pieces */
 .palette-piece.selected {
+  /* Change border color to purple */
   border-color: #667eea;
+  /* Add semi-transparent purple background */
   background: rgba(102, 126, 234, 0.1);
+  /* Add outer box shadow for emphasis */
   box-shadow: 0 0 0 2px #667eea;
 }
 
+/* Style rules for images inside palette pieces */
 .palette-piece img {
-  width: 95%;
-  height: 95%;
+  /* Set width to 99% of container */
+  width: 99%;
+  /* Set height to 99% of container */
+  height: 99%;
+  /* Add subtle drop shadow */
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
 }
 
+/* Style rules for palette pieces on hover (desktop) */
 .palette-piece:hover {
+  /* Change border color to purple on hover */
   border-color: #667eea;
 }
 
+/* Style rules for status section (contains buttons) */
 .status {
+  /* Use flexbox for horizontal layout */
   display: flex;
+  /* Arrange children horizontally */
   flex-direction: row;
+  /* Space between buttons */
   gap: 15px;
+  /* Center content vertically */
   align-items: center;
+  /* Center content horizontally */
   justify-content: center;
+  /* Top padding only */
   padding: 15px 10px 0 10px;
+  /* Transparent background */
   background: transparent;
+  /* No border radius */
   border-radius: 0;
+  /* No backdrop filter */
   backdrop-filter: none;
 }
 
+/* Style rules for the reset button */
 .reset-button {
+  /* Purple gradient background matching body gradient */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* White text color */
   color: white;
+  /* Remove default button border */
   border: none;
+  /* Padding inside button */
   padding: 10px 24px;
+  /* Rounded corners */
   border-radius: 8px;
+  /* Slightly smaller font */
   font-size: 0.9em;
+  /* Semi-bold font weight */
   font-weight: 600;
+  /* Pointer cursor on hover */
   cursor: pointer;
+  /* Purple drop shadow */
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  /* Full width of container */
   width: 100%;
 }
 
+/* Style rules for reset button on hover */
 .reset-button:hover {
+  /* Enhance shadow on hover for depth effect */
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
 }
 
+/* Style rules for reset button when actively pressed */
 .reset-button:active {
+  /* Reduce shadow when pressed for pressed effect */
   box-shadow: 0 1px 4px rgba(102, 126, 234, 0.2);
 }
 
-/* Modal styles */
+/* Style rules for modal overlay (confirmation dialog) */
 .modal {
+  /* Hidden by default (JavaScript shows it) */
   display: none;
+  /* Fixed positioning to overlay entire screen */
   position: fixed;
+  /* High z-index to appear above all content */
   z-index: 1000;
+  /* Align to left edge */
   left: 0;
+  /* Align to top edge */
   top: 0;
+  /* Full viewport width */
   width: 100%;
+  /* Full viewport height */
   height: 100%;
+  /* Semi-transparent black overlay */
   background-color: rgba(0, 0, 0, 0.5);
+  /* Center modal content horizontally */
   justify-content: center;
+  /* Center modal content vertically */
   align-items: center;
+  /* Blur background content behind modal */
   backdrop-filter: blur(4px);
 }
 
+/* Style rules for modal content box */
 .modal-content {
+  /* White background */
   background: white;
+  /* Internal padding */
   padding: 30px;
+  /* Rounded corners */
   border-radius: 15px;
+  /* Drop shadow for depth */
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  /* Center text */
   text-align: center;
+  /* Maximum width constraint */
   max-width: 400px;
+  /* Fade-in animation */
   animation: modalFadeIn 0.2s ease;
 }
 
+/* Keyframe animation for modal appearing */
 @keyframes modalFadeIn {
+  /* Start state: transparent and slightly scaled down */
   from {
     opacity: 0;
     transform: scale(0.9);
   }
+  /* End state: fully visible and normal size */
   to {
     opacity: 1;
     transform: scale(1);
   }
 }
 
+/* Style rules for h2 headings inside modal */
 .modal-content h2 {
+  /* Space below heading */
   margin-bottom: 15px;
+  /* Dark gray text */
   color: #333;
+  /* Larger font size */
   font-size: 1.5em;
 }
 
+/* Style rules for paragraphs inside modal */
 .modal-content p {
+  /* Space below paragraph */
   margin-bottom: 25px;
+  /* Medium gray text */
   color: #666;
+  /* Default font size */
   font-size: 1em;
 }
 
+/* Style rules for modal button container */
 .modal-buttons {
+  /* Use flexbox for horizontal layout */
   display: flex;
+  /* Space between buttons */
   gap: 15px;
+  /* Center buttons horizontally */
   justify-content: center;
 }
 
+/* Style rules for all modal buttons */
 .modal-btn {
+  /* Padding inside buttons */
   padding: 10px 25px;
+  /* Remove default border */
   border: none;
+  /* Rounded corners */
   border-radius: 8px;
+  /* Default font size */
   font-size: 1em;
+  /* Semi-bold font */
   font-weight: 600;
+  /* Pointer cursor */
   cursor: pointer;
 }
 
+/* Style rules for confirm button (destructive action) */
 .confirm-btn {
+  /* Red background for destructive action */
   background: #dc3545;
+  /* White text */
   color: white;
 }
 
+/* Style rules for confirm button on hover */
 .confirm-btn:hover {
+  /* Darker red on hover */
   background: #c82333;
 }
 
+/* Style rules for cancel button */
 .cancel-btn {
+  /* Gray background */
   background: #6c757d;
+  /* White text */
   color: white;
 }
 
+/* Style rules for cancel button on hover */
 .cancel-btn:hover {
+  /* Darker gray on hover */
   background: #5a6268;
 }
 
-/* Wide screen layout - panel on the right */
+/* Media query for wide screens (desktop) - panel moves to right side */
 @media (min-width: 1400px) {
+  /* Change board container to horizontal layout */
   .board-container {
+    /* Arrange children horizontally */
     flex-direction: row;
+    /* Increase gap between board and panel */
     gap: 20px;
   }
 
+  /* Adjust chessboard size for wide screens */
   .chessboard {
+    /* Recalculate width accounting for side panel (450px) */
     width: min(calc(100vh - 40px), calc(100vw - 450px));
+    /* Maintain square aspect ratio */
     height: min(calc(100vh - 40px), calc(100vw - 450px));
   }
 
+  /* Adjust offboard panel for wide screens */
   .offboard {
+    /* Keep static positioning */
     position: static;
+    /* Fixed width for side panel */
     width: 350px;
+    /* Adjust max height for taller screens */
     max-height: calc(100vh - 80px);
+    /* Remove transform */
     transform: none;
   }
 }
 
-/* Responsive design */
+/* Media query for tablets and smaller screens */
 @media (max-width: 768px) {
+  /* Reduce body padding */
   body {
     padding: 5px;
   }
 
+  /* Adjust container padding and gap */
   .container {
     padding: 5px;
     gap: 10px;
   }
 
+  /* Adjust board container layout */
   .board-container {
+    /* Stack vertically */
     flex-direction: column;
+    /* Center items */
     align-items: center;
+    /* Reduce gap */
     gap: 10px;
   }
 
+  /* Reduce chessboard size for smaller screens */
   .chessboard {
+    /* Recalculate dimensions for mobile */
     width: min(calc(100vw - 10px), calc(100vh - 200px));
     height: min(calc(100vw - 10px), calc(100vh - 200px));
+    /* Thinner border */
     border-width: 2px;
   }
 
+  /* Adjust piece sizing */
   .piece {
+    /* Recalculate font size based on mobile board size */
     font-size: min(calc((100vw - 10px) / 8), calc((100vh - 200px) / 8));
+    /* Disable default touch behaviors */
     touch-action: none;
   }
 
+  /* Adjust offboard panel for mobile */
   .offboard {
+    /* Static positioning */
     position: static;
+    /* Remove transform */
     transform: none;
+    /* Nearly full width */
     width: calc(100vw - 20px);
+    /* Reduce max height */
     max-height: 180px;
+    /* Reduce padding */
     padding: 10px;
+    /* Ensure panel appears below board */
     order: 2;
+    /* Reset positioning properties */
     right: auto;
     top: auto;
   }
 
+  /* Adjust offboard heading size */
   .offboard h3 {
+    /* Smaller font */
     font-size: 0.9em;
+    /* Reduce margin */
     margin-bottom: 8px;
   }
 
+  /* Adjust section divider spacing */
   .offboard h3.section-divider {
+    /* Reduce top margin */
     margin-top: 15px;
   }
 
-  #piece-palette,
-  #aquatic-palette {
+  /* Remove gaps from palette containers */
+  #piece-palette {
     gap: 0;
   }
 
+  /* Remove gaps from piece rows */
   .piece-row {
     gap: 0;
   }
 
+  /* Reduce palette piece size */
   .palette-piece {
+    /* Smaller width */
     width: 40px;
+    /* Smaller height */
     height: 40px;
+    /* Smaller font */
     font-size: 28px;
+    /* Less padding */
     padding: 3px;
+    /* Disable touch behaviors */
     touch-action: none;
   }
 
+  /* Adjust status section padding */
   .status {
+    /* Top padding only */
     padding: 10px 0 0 0;
   }
 
+  /* Adjust reset button sizing */
   .reset-button {
+    /* Full width */
     width: 100%;
+    /* Increase padding */
     padding: 12px 24px;
+    /* Larger font */
     font-size: 1em;
   }
 
+  /* Adjust modal content for mobile */
   .modal-content {
+    /* Add side margin */
     margin: 10px;
+    /* Reduce padding */
     padding: 20px;
+    /* Constrain width */
     max-width: calc(100vw - 40px);
   }
 
+  /* Adjust modal heading size */
   .modal-content h2 {
+    /* Smaller font */
     font-size: 1.3em;
   }
 
+  /* Adjust modal paragraph */
   .modal-content p {
+    /* Smaller font */
     font-size: 0.9em;
+    /* Reduce margin */
     margin-bottom: 20px;
   }
 
+  /* Stack modal buttons vertically */
   .modal-buttons {
+    /* Vertical layout */
     flex-direction: column;
+    /* Reduce gap */
     gap: 10px;
   }
 
+  /* Make modal buttons full width */
   .modal-btn {
+    /* Full width */
     width: 100%;
+    /* Increase padding */
     padding: 12px;
   }
 
+  /* Adjust h1 size for mobile */
   h1 {
+    /* Smaller font */
     font-size: 1.8em;
   }
 }
 
+/* Media query for very small screens (phones) */
 @media (max-width: 480px) {
+  /* Remove body padding */
   body {
     padding: 0;
   }
 
+  /* Minimal container spacing */
   .container {
     padding: 5px;
     gap: 8px;
   }
 
+  /* Further reduce chessboard size */
   .chessboard {
+    /* Minimal dimensions */
     width: min(calc(100vw - 10px), calc(100vh - 200px));
     height: min(calc(100vw - 10px), calc(100vh - 200px));
+    /* Minimal border */
     border-width: 1px;
   }
 
+  /* Adjust piece sizing */
   .piece {
+    /* Calculate from minimal board size */
     font-size: calc((100vw - 10px) / 8);
   }
 
+  /* Minimal offboard panel */
   .offboard {
+    /* Static position */
     position: static;
+    /* No transform */
     transform: none;
+    /* Minimal width */
     width: calc(100vw - 10px);
+    /* Very limited height */
     max-height: 160px;
+    /* Minimal padding */
     padding: 6px;
+    /* Minimal gap */
     gap: 6px;
+    /* Reset positioning */
     right: auto;
     top: auto;
   }
 
+  /* Minimal heading size */
   .offboard h3 {
+    /* Very small font */
     font-size: 0.8em;
+    /* Minimal margin */
     margin-bottom: 6px;
   }
 
+  /* Minimal divider spacing */
   .offboard h3.section-divider {
+    /* Minimal top margin */
     margin-top: 8px;
   }
 
-  #piece-palette,
-  #aquatic-palette {
+  /* No gaps in palettes */
+  #piece-palette {
     gap: 0;
   }
 
+  /* No gaps in rows */
   .piece-row {
     gap: 0;
   }
 
+  /* Very small palette pieces */
   .palette-piece {
+    /* Minimal width */
     width: 38px;
+    /* Minimal height */
     height: 38px;
+    /* Small font */
     font-size: 26px;
+    /* Minimal padding */
     padding: 2px;
   }
 
+  /* Adjust reset button */
   .reset-button {
+    /* Smaller font */
     font-size: 0.85em;
+    /* Less padding */
     padding: 8px 16px;
   }
 }
 
-/* Touch improvements */
+/* Media query for touch devices without hover capability */
 @media (hover: none) and (pointer: coarse) {
+  /* Remove pointer cursor from pieces on touch devices */
   .piece {
+    /* Default cursor */
     cursor: default;
   }
 
+  /* Remove pointer cursor from palette pieces on touch devices */
   .palette-piece {
+    /* Default cursor */
     cursor: default;
   }
 
+  /* Add press effect to reset button */
   .reset-button:active {
+    /* Slightly scale down when pressed */
     transform: scale(0.95);
   }
 
+  /* Add press effect to modal buttons */
   .modal-btn:active {
+    /* Slightly scale down when pressed */
     transform: scale(0.95);
   }
 }

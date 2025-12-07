@@ -1,43 +1,97 @@
+<!-- HTML5 doctype declaration that tells the browser this is an HTML5 document -->
 <!DOCTYPE html>
+<!-- Opening html tag with lang attribute set to "en" for English language content -->
 <html lang="en">
+  <!-- Head section contains metadata and resources that don't render visibly on the page -->
   <head>
+    <!-- Meta tag specifying UTF-8 character encoding for proper display of international characters -->
     <meta charset="UTF-8" />
+    <!-- Viewport meta tag for responsive design on mobile devices -->
+    <!-- width=device-width sets the viewport width to match the device's screen width -->
+    <!-- initial-scale=1.0 sets the initial zoom level to 100% when the page loads -->
+    <!-- maximum-scale=1.0 prevents users from zooming beyond 100% -->
+    <!-- user-scalable=no disables pinch-to-zoom functionality on mobile devices -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
+    <!-- Title element that appears in the browser tab and bookmarks -->
     <title>Chess Sandbox - Multiplayer</title>
+    <!-- Link tag loading the favicon (browser tab icon) as an SVG image format -->
+    <!-- rel="icon" specifies this is a favicon resource -->
+    <!-- type="image/svg+xml" tells the browser the favicon is an SVG file -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Link tag loading the external CSS stylesheet for visual styling of the page -->
+    <!-- rel="stylesheet" specifies this is a CSS stylesheet resource -->
     <link rel="stylesheet" href="style.css" />
   </head>
+  <!-- Body element contains all the visible content that renders in the browser window -->
   <body>
+    <!-- Main container div that wraps the entire application layout -->
+    <!-- class="container" applies CSS styles defined for the container class -->
     <div class="container">
+      <!-- Board container div that holds the chessboard and side panel elements -->
+      <!-- class="board-container" applies flexbox layout styles for positioning child elements -->
       <div class="board-container">
+        <!-- Chessboard div where the 8x8 grid and pieces will be dynamically rendered by JavaScript -->
+        <!-- id="chessboard" allows JavaScript to select this element using getElementById -->
+        <!-- class="chessboard" applies CSS grid styles to create the 8x8 board layout -->
         <div id="chessboard" class="chessboard"></div>
+        <!-- Offboard panel div for piece palette and controls (displays pieces available to place) -->
+        <!-- id="offboard" allows JavaScript to select this element for manipulation -->
+        <!-- class="offboard" applies styles for the side panel appearance -->
         <div id="offboard" class="offboard">
+          <!-- Heading (level 3) labeling the piece selection area -->
           <h3>Chess Pieces</h3>
+          <!-- Empty div that will be populated by JavaScript with clickable piece images -->
+          <!-- id="piece-palette" allows JavaScript to dynamically insert piece elements -->
           <div id="piece-palette"></div>
+          <!-- Status div containing action buttons for board management -->
+          <!-- class="status" applies styles for button container layout -->
           <div class="status">
+            <!-- Button to trigger board reset functionality -->
+            <!-- id="reset-btn" allows JavaScript to attach a click event listener -->
+            <!-- class="reset-button" applies visual button styles from CSS -->
             <button id="reset-btn" class="reset-button">Reset Board</button>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Modal dialog div (initially hidden) that displays confirmation when user wants to reset -->
+    <!-- id="reset-modal" allows JavaScript to show/hide this modal -->
+    <!-- class="modal" applies overlay styles that cover the entire screen -->
     <div id="reset-modal" class="modal">
+      <!-- Modal content div containing the actual dialog box with white background -->
+      <!-- class="modal-content" applies styles for the centered dialog box -->
       <div class="modal-content">
+        <!-- Heading (level 2) asking user to confirm the reset action -->
         <h2>Reset Board?</h2>
+        <!-- Paragraph explaining the impact of resetting (affects all connected users) -->
         <p>This will reset the board for all connected users.</p>
+        <!-- Div containing the action buttons for the modal dialog -->
+        <!-- class="modal-buttons" applies flexbox styles to arrange buttons horizontally -->
         <div class="modal-buttons">
+          <!-- Confirm button that proceeds with the reset action when clicked -->
+          <!-- id="confirm-reset" allows JavaScript to attach the reset event handler -->
+          <!-- class="modal-btn confirm-btn" applies general button styles and red confirmation color -->
           <button id="confirm-reset" class="modal-btn confirm-btn">
             Reset
           </button>
+          <!-- Cancel button that closes the modal without resetting -->
+          <!-- id="cancel-reset" allows JavaScript to attach the cancel event handler -->
+          <!-- class="modal-btn cancel-btn" applies general button styles and gray cancel color -->
           <button id="cancel-reset" class="modal-btn cancel-btn">Cancel</button>
         </div>
       </div>
     </div>
 
+    <!-- Script tag loading the Socket.IO client library from the server for real-time communication -->
+    <!-- src="/socket.io/socket.io.js" path is automatically served by the Socket.IO server -->
     <script src="/socket.io/socket.io.js"></script>
+    <!-- Script tag loading the main application JavaScript file containing game logic -->
+    <!-- src="script.js" path points to the local script file in the public directory -->
     <script src="script.js"></script>
   </body>
+<!-- Closing html tag marking the end of the HTML document -->
 </html>
