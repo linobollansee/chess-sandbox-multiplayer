@@ -742,16 +742,23 @@ socket.on("pieceMove", ({ pieceId, newPosition }) => {
 socket.on("pieceRemoved", (pieceId) => {
   // Remove the piece from local board state array
   boardState.pieces = boardState.pieces.filter((p) => p.id !== pieceId);
-  // Re-render all pieces to reflect the removal
-  renderPieces();
+  // Find and remove only the specific piece DOM element
+  const pieceElement = document.querySelector(`[data-id="${pieceId}"]`);
+  if (pieceElement) {
+    pieceElement.remove();
+  }
+  // Invalidate caches after piece removal
+  invalidatePieceCaches();
 });
 
 // Register Socket.IO event handler for when a piece is added
 socket.on("pieceAdded", (piece) => {
   // Add the new piece to local board state array
   boardState.pieces.push(piece);
-  // Re-render all pieces to show the new piece
-  renderPieces();
+  // Render only the new piece
+  renderPiece(piece);
+  // Invalidate caches after piece addition
+  invalidatePieceCaches();
 });
 
 // Get reference to the reset modal element
