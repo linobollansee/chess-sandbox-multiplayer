@@ -122,7 +122,6 @@ async function initDatabase() {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
-    console.log("Database initialized");
   } catch (err) {
     console.error("Error initializing database:", err);
   }
@@ -137,9 +136,7 @@ async function loadBoardState() {
     if (result.rows.length > 0) {
       return result.rows[0].state;
     }
-  } catch (err) {
-    console.error("Error loading board state:", err);
-  }
+  } catch (err) {}
   return JSON.parse(JSON.stringify(variants.standard));
 }
 
@@ -153,9 +150,7 @@ async function saveBoardState() {
        DO UPDATE SET state = $1, updated_at = CURRENT_TIMESTAMP`,
       [boardState]
     );
-  } catch (err) {
-    console.error("Error saving board state:", err);
-  }
+  } catch (err) {}
 }
 
 // Store the current board state
@@ -171,12 +166,14 @@ io.on("connection", (socket) => {
   // Send current board state to new user
   socket.emit("boardState", boardState);
 
-  // Broadcast user count to all clients
-  io.emit("userCount", io.engine.clientsCount);
-
   // Handle piece movement
   socket.on("movePiece", (data) => {
     const { pieceId, newPosition } = data;
+
+    // Validate position format (e.g., "a1", "h8")
+    if (!/^[a-h][1-8]$/.test(newPosition)) {
+      return;
+    }
 
     // Update board state
     const piece = boardState.pieces.find((p) => p.id === pieceId);
@@ -205,6 +202,40 @@ io.on("connection", (socket) => {
 
   // Handle creating new piece
   socket.on("createPiece", (data) => {
+    // Validate piece data
+    const validTypes = [
+      "king",
+      "queen",
+      "rook",
+      "bishop",
+      "knight",
+      "pawn",
+      "elephant",
+      "giraffe",
+      "unicorn",
+      "zebra",
+      "mann",
+      "centaur",
+      "commoner",
+      "champion",
+      "wizard",
+      "fool",
+      "archbishop",
+      "chancellor",
+      "amazon",
+      "dragon",
+      "ship",
+    ];
+    const validColors = ["white", "black", "special"];
+
+    if (!validTypes.includes(data.type) || !validColors.includes(data.color)) {
+      return;
+    }
+
+    if (!/^[a-h][1-8]$/.test(data.position)) {
+      return;
+    }
+
     const newPiece = {
       id: data.color[0] + data.type[0] + Date.now(),
       type: data.type,
@@ -214,6 +245,24 @@ io.on("connection", (socket) => {
     boardState.pieces.push(newPiece);
     io.emit("pieceAdded", newPiece);
     saveBoardState();
+  });
+
+  // Handle chat messages
+  socket.on("chatMessage", (message) => {
+    // Validate and sanitize message
+    if (typeof message !== "string" || message.trim().length === 0) {
+      return;
+    }
+
+    // Limit message length
+    const sanitizedMessage = message.trim().slice(0, 200);
+
+    // Broadcast to all clients
+    io.emit("chatMessage", {
+      message: sanitizedMessage,
+      timestamp: Date.now(),
+      socketId: socket.id.slice(0, 6),
+    });
   });
 
   // Handle reset board
@@ -228,8 +277,6 @@ io.on("connection", (socket) => {
       socket.handshake.headers["x-forwarded-for"]?.split(",")[0] ||
       socket.handshake.address;
     console.log("User disconnected:", socket.id, "IP:", userIP);
-    // Broadcast updated user count
-    io.emit("userCount", io.engine.clientsCount);
   });
 });
 
@@ -241,7 +288,7 @@ async function startServer() {
   boardState = await loadBoardState();
 
   http.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server is running on http://localhost:${PORT}`);
   });
 }
 

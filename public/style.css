@@ -16,12 +16,10 @@ body {
   justify-content: center;
   align-items: center;
   padding: 0;
+  margin: 0;
   overflow: hidden;
-}
-
-body.dragging,
-body.dragging * {
-  cursor: none !important;
+  width: 100vw;
+  height: 100vh;
 }
 
 .container {
@@ -29,8 +27,8 @@ body.dragging * {
   flex-direction: column;
   height: 100vh;
   width: 100vw;
-  padding: 20px;
-  gap: 20px;
+  padding: 0;
+  gap: 0;
 }
 
 h1 {
@@ -49,23 +47,29 @@ h1 {
 
 .board-container {
   display: flex;
-  gap: 30px;
+  flex-direction: column;
+  gap: 10px;
   justify-content: center;
   align-items: center;
   flex: 1;
   min-height: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
 .chessboard {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  border: 3px solid #333;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: none;
+  box-shadow: none;
   flex-shrink: 0;
-  width: min(calc(100vh - 140px), calc(100vw - 340px));
-  height: min(calc(100vh - 140px), calc(100vw - 340px));
-  background: #f0d9b5;
+  width: min(calc(100vh - 250px), calc(100vw - 20px));
+  height: min(calc(100vh - 250px), calc(100vw - 20px));
+  background-image: url("/images/chessboard.svg");
+  background-size: cover;
+  background-position: center;
   overflow: hidden;
 }
 
@@ -80,16 +84,15 @@ h1 {
 }
 
 .square.light {
-  background-color: #f0d9b5;
+  background-color: transparent;
 }
 
 .square.dark {
-  background-color: #b58863;
+  background-color: transparent;
 }
 
 .piece {
-  font-size: min(calc((100vh - 140px) / 8), calc((100vw - 340px) / 8));
-  cursor: grab;
+  cursor: pointer;
   user-select: none;
   width: 100%;
   height: 100%;
@@ -100,19 +103,19 @@ h1 {
   position: absolute;
   top: 0;
   left: 0;
-  -webkit-user-drag: element;
+  -webkit-user-drag: none;
+  pointer-events: auto;
+}
+
+.piece img {
+  width: 95%;
+  height: 95%;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  pointer-events: none;
 }
 
 .piece:active {
-  cursor: none !important;
-}
-
-* {
-  cursor: inherit !important;
-}
-
-body:active {
-  cursor: none !important;
+  cursor: pointer;
 }
 
 .piece.selected {
@@ -121,16 +124,33 @@ body:active {
   box-shadow: inset 0 0 0 3px #667eea;
 }
 
+.piece.ghost-piece {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.piece.ghost-piece svg {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.piece.special {
+  font-size: min(calc((100vh - 100px) / 8), calc((100vw - 40px) / 8), 48px);
+}
+
 .offboard {
   background: rgba(255, 255, 255, 0.95);
   border: 2px solid #ddd;
   border-radius: 10px;
   padding: 15px;
-  width: 350px;
-  max-height: calc(100vh - 140px);
+  width: calc(100vw - 40px);
+  max-width: 600px;
+  max-height: 300px;
   overflow-y: auto;
   flex-shrink: 0;
   backdrop-filter: blur(10px);
+  position: static;
+  transform: none;
+  z-index: 10;
 }
 
 .offboard h3 {
@@ -147,21 +167,21 @@ body:active {
 #piece-palette {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   justify-content: center;
 }
 
 #aquatic-palette {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   justify-content: center;
 }
 
 .piece-row {
   display: flex;
   flex-wrap: nowrap;
-  gap: 10px;
+  gap: 0;
   justify-content: center;
 }
 
@@ -170,7 +190,6 @@ body:active {
   border: 2px solid #ddd;
   border-radius: 8px;
   padding: 5px;
-  font-size: 36px;
   cursor: grab;
   width: 48px;
   height: 48px;
@@ -179,6 +198,18 @@ body:active {
   justify-content: center;
   flex-shrink: 0;
   position: relative;
+}
+
+.palette-piece.selected {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 2px #667eea;
+}
+
+.palette-piece img {
+  width: 95%;
+  height: 95%;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
 }
 
 .palette-piece:hover {
@@ -191,10 +222,10 @@ body:active {
   gap: 15px;
   align-items: center;
   justify-content: center;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
+  padding: 15px 10px 0 10px;
+  background: transparent;
+  border-radius: 0;
+  backdrop-filter: none;
 }
 
 .reset-button {
@@ -202,11 +233,12 @@ body:active {
   color: white;
   border: none;
   padding: 10px 24px;
-  border-radius: 20px;
+  border-radius: 8px;
   font-size: 0.9em;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  width: 100%;
 }
 
 .reset-button:hover {
@@ -215,15 +247,6 @@ body:active {
 
 .reset-button:active {
   box-shadow: 0 1px 4px rgba(102, 126, 234, 0.2);
-}
-
-#user-count {
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 0.9em;
-  background: #e8f4f8;
-  color: #1a5490;
 }
 
 /* Modal styles */
@@ -307,35 +330,63 @@ body:active {
   background: #5a6268;
 }
 
+/* Wide screen layout - panel on the right */
+@media (min-width: 1400px) {
+  .board-container {
+    flex-direction: row;
+    gap: 20px;
+  }
+
+  .chessboard {
+    width: min(calc(100vh - 40px), calc(100vw - 450px));
+    height: min(calc(100vh - 40px), calc(100vw - 450px));
+  }
+
+  .offboard {
+    position: static;
+    width: 350px;
+    max-height: calc(100vh - 80px);
+    transform: none;
+  }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
+  body {
+    padding: 5px;
+  }
+
   .container {
-    padding: 10px;
+    padding: 5px;
     gap: 10px;
   }
 
   .board-container {
     flex-direction: column;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
   }
 
   .chessboard {
-    width: min(calc(100vw - 20px), calc(100vh - 200px));
-    height: min(calc(100vw - 20px), calc(100vh - 200px));
+    width: min(calc(100vw - 10px), calc(100vh - 200px));
+    height: min(calc(100vw - 10px), calc(100vh - 200px));
     border-width: 2px;
   }
 
   .piece {
-    font-size: min(calc((100vw - 20px) / 8), calc((100vh - 200px) / 8));
+    font-size: min(calc((100vw - 10px) / 8), calc((100vh - 200px) / 8));
     touch-action: none;
   }
 
   .offboard {
+    position: static;
+    transform: none;
     width: calc(100vw - 20px);
-    max-height: 150px;
+    max-height: 180px;
     padding: 10px;
     order: 2;
+    right: auto;
+    top: auto;
   }
 
   .offboard h3 {
@@ -349,11 +400,11 @@ body:active {
 
   #piece-palette,
   #aquatic-palette {
-    gap: 8px;
+    gap: 0;
   }
 
   .piece-row {
-    gap: 8px;
+    gap: 0;
   }
 
   .palette-piece {
@@ -365,21 +416,13 @@ body:active {
   }
 
   .status {
-    flex-direction: column;
-    gap: 10px;
-    padding: 8px;
-    order: 3;
+    padding: 10px 0 0 0;
   }
 
   .reset-button {
     width: 100%;
     padding: 12px 24px;
     font-size: 1em;
-  }
-
-  #user-count {
-    font-size: 0.85em;
-    padding: 6px 12px;
   }
 
   .modal-content {
@@ -413,13 +456,19 @@ body:active {
 }
 
 @media (max-width: 480px) {
+  body {
+    padding: 0;
+  }
+
   .container {
     padding: 5px;
+    gap: 8px;
   }
 
   .chessboard {
-    width: calc(100vw - 10px);
-    height: calc(100vw - 10px);
+    width: min(calc(100vw - 10px), calc(100vh - 200px));
+    height: min(calc(100vw - 10px), calc(100vh - 200px));
+    border-width: 1px;
   }
 
   .piece {
@@ -427,19 +476,44 @@ body:active {
   }
 
   .offboard {
+    position: static;
+    transform: none;
     width: calc(100vw - 10px);
-    max-height: 130px;
-    padding: 8px;
+    max-height: 160px;
+    padding: 6px;
+    gap: 6px;
+    right: auto;
+    top: auto;
+  }
+
+  .offboard h3 {
+    font-size: 0.8em;
+    margin-bottom: 6px;
+  }
+
+  .offboard h3.section-divider {
+    margin-top: 8px;
+  }
+
+  #piece-palette,
+  #aquatic-palette {
+    gap: 0;
+  }
+
+  .piece-row {
+    gap: 0;
   }
 
   .palette-piece {
-    width: 36px;
-    height: 36px;
-    font-size: 24px;
+    width: 38px;
+    height: 38px;
+    font-size: 26px;
+    padding: 2px;
   }
 
   .reset-button {
-    font-size: 0.9em;
+    font-size: 0.85em;
+    padding: 8px 16px;
   }
 }
 

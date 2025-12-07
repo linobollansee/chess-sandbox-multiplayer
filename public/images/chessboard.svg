@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Chessboard 8x8</title>
+  <defs>
+    <pattern id="chessboard" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="100" height="100" fill="#f0d9b5"/>
+      <rect x="100" y="0" width="100" height="100" fill="#b58863"/>
+      <rect x="0" y="100" width="100" height="100" fill="#b58863"/>
+      <rect x="100" y="100" width="100" height="100" fill="#f0d9b5"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="800" fill="url(#chessboard)"/>
+</svg>
