@@ -1,6 +1,42 @@
 // Initialize Socket.IO client connection to the server, establishing bidirectional communication channel
 const socket = io();
 
+// Cache frequently accessed DOM elements for better performance
+let cachedPalettePieces = null;
+let cachedBoardPieces = null;
+let cachedAllPieces = null;
+
+// Helper function to get cached palette pieces or query if needed
+function getPalettePieces() {
+  if (!cachedPalettePieces) {
+    cachedPalettePieces = Array.from(document.querySelectorAll(".palette-piece"));
+  }
+  return cachedPalettePieces;
+}
+
+// Helper function to get cached board pieces or query if needed
+function getBoardPieces() {
+  if (!cachedBoardPieces) {
+    cachedBoardPieces = Array.from(document.querySelectorAll(".piece:not(.palette-piece)"));
+  }
+  return cachedBoardPieces;
+}
+
+// Helper function to get all pieces
+function getAllPieces() {
+  if (!cachedAllPieces) {
+    cachedAllPieces = Array.from(document.querySelectorAll(".piece"));
+  }
+  return cachedAllPieces;
+}
+
+// Helper function to invalidate caches when pieces change
+function invalidatePieceCaches() {
+  cachedPalettePieces = null;
+  cachedBoardPieces = null;
+  cachedAllPieces = null;
+}
+
 // Define object mapping piece types and colors to their corresponding SVG image file paths
 const pieceImages = {
   // White pieces sub-object containing paths to all light-colored piece SVG files
@@ -103,12 +139,8 @@ let selectedPiece = null;
 let selectedPaletteType = null;
 // Variable to track the selected piece color from the palette (null when no palette piece selected)
 let selectedPaletteColor = null;
-// Variable to store the timer ID for long-press detection on touch devices (null when no press active)
-let longPressTimer = null;
-// Variable to store reference to the ghost piece DOM element for preview (null when no ghost shown)
-let ghostPiece = null;
-// Variable to track which piece ID is being long-pressed on touch devices (null when no long press)
-let longPressPieceId = null;
+// Boolean flag to track if delete mode is active (when user clicks trash icon)
+let deleteMode = false;
 // Boolean flag to detect if the device supports touch input (checks for touch events or touch points)
 let isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
@@ -152,10 +184,6 @@ function initBoard() {
       } else {
         // For desktop devices: use standard click event with mouse
         square.addEventListener("click", handleSquareClick);
-        // Add mouseenter event for hover effects (showing ghost pieces on desktop)
-        square.addEventListener("mouseenter", handleSquareHover);
-        // Add mouseleave event to remove ghost pieces when mouse leaves square
-        square.addEventListener("mouseleave", handleSquareLeave);
       }
       // Append the configured square div to the chessboard container
       board.appendChild(square);
@@ -178,6 +206,9 @@ function renderPieces() {
       renderPiece(piece);
     }
   });
+  
+  // Invalidate caches after rendering
+  invalidatePieceCaches();
 }
 
 // Function to initialize the piece palette UI with standard and fairy chess pieces
@@ -186,6 +217,26 @@ function initPalette() {
   const palette = document.getElementById("piece-palette");
   // Clear any existing palette content
   palette.innerHTML = "";
+
+  // Create delete mode button/icon
+  const deleteButton = document.createElement("div");
+  deleteButton.className = "delete-button palette-piece";
+  deleteButton.innerHTML = '<img src="/images/delete-icon.svg" alt="Delete Mode">';
+  deleteButton.title = "Delete Mode - Click to remove pieces";
+  deleteButton.id = "delete-mode-btn";
+  
+  // Attach click handler for delete mode toggle
+  if (isTouchDevice) {
+    deleteButton.addEventListener("touchend", handleDeleteModeClick, { passive: false });
+  } else {
+    deleteButton.addEventListener("click", handleDeleteModeClick);
+  }
+  
+  // Add delete button to palette
+  const deleteRow = document.createElement("div");
+  deleteRow.className = "piece-row";
+  deleteRow.appendChild(deleteButton);
+  palette.appendChild(deleteRow);
 
   // Define array of standard chess piece types that appear in normal chess games
   const standardPieces = ["king", "queen", "rook", "bishop", "knight", "pawn"];
@@ -318,12 +369,13 @@ function initPalette() {
       row.appendChild(paletteItemElement);
     });
 
-    // Append completed row to palette
-    palette.appendChild(row);
-  }
+  // Append completed row to palette
+  palette.appendChild(row);
 }
 
-// Function to render a single piece on the board at its position
+// Invalidate caches after palette initialization
+invalidatePieceCaches();
+}// Function to render a single piece on the board at its position
 function renderPiece(piece) {
   // Find the square element that matches the piece's position using data-position attribute
   const square = document.querySelector(`[data-position="${piece.position}"]`);
@@ -359,14 +411,12 @@ function renderPiece(piece) {
     });
     // touchmove: fires when user drags finger while touching the piece
     boardPieceElement.addEventListener("touchmove", handlePieceTouchMove, {
-      passive: false,
+      passive: true,
     });
   } else {
     // Desktop devices: attach mouse event handlers
     // click: for selecting/moving pieces
     boardPieceElement.addEventListener("click", handlePieceClick);
-    // dblclick: for double-clicking to delete pieces
-    boardPieceElement.addEventListener("dblclick", handlePieceDoubleClick);
   }
 
   // Append the configured piece element to its square on the board
@@ -399,11 +449,7 @@ function handlePaletteClick(e) {
     selectedPaletteColor === clickedColor
   ) {
     // Remove "selected" class from all palette pieces (deselect all)
-    document
-      .querySelectorAll(".palette-piece")
-      .forEach((p) => p.classList.remove("selected"));
-    // Remove any ghost piece preview from the board
-    removeGhostPiece();
+    getPalettePieces().forEach((p) => p.classList.remove("selected"));
     // Clear the selected palette type variable
     selectedPaletteType = null;
     // Clear the selected palette color variable
@@ -413,18 +459,9 @@ function handlePaletteClick(e) {
   }
 
   // Remove "selected" class from all palette pieces (clear previous selection)
-  document
-    .querySelectorAll(".palette-piece")
-    .forEach((p) => p.classList.remove("selected"));
+  getPalettePieces().forEach((p) => p.classList.remove("selected"));
   // Remove "selected" class from all board pieces (switching from board piece to palette)
-  document
-    .querySelectorAll(".piece:not(.palette-piece)")
-    .forEach((p) => p.classList.remove("selected"));
-
-  // On desktop, remove any ghost piece when selecting new palette piece
-  if (!isTouchDevice) {
-    removeGhostPiece();
-  }
+  getBoardPieces().forEach((p) => p.classList.remove("selected"));
 
   // Add "selected" class to the clicked palette piece
   paletteItemElement.classList.add("selected");
@@ -434,6 +471,38 @@ function handlePaletteClick(e) {
   selectedPaletteColor = clickedColor;
   // Clear any selected board piece (can't have both palette and board piece selected)
   selectedPiece = null;
+  // Disable delete mode when selecting a piece
+  deleteMode = false;
+  document.getElementById("delete-mode-btn")?.classList.remove("selected");
+}
+
+// Function to handle clicks on the delete mode button
+function handleDeleteModeClick(e) {
+  // Stop event from bubbling
+  e.stopPropagation();
+  // Prevent default behavior
+  e.preventDefault();
+
+  // Toggle delete mode
+  deleteMode = !deleteMode;
+  
+  const deleteBtn = document.getElementById("delete-mode-btn");
+  
+  if (deleteMode) {
+    // Enable delete mode
+    deleteBtn.classList.add("selected");
+    // Clear all other selections
+    getPalettePieces().forEach((p) => {
+      if (p.id !== "delete-mode-btn") p.classList.remove("selected");
+    });
+    getBoardPieces().forEach((p) => p.classList.remove("selected"));
+    selectedPaletteType = null;
+    selectedPaletteColor = null;
+    selectedPiece = null;
+  } else {
+    // Disable delete mode
+    deleteBtn.classList.remove("selected");
+  }
 }
 
 // Function to handle clicks on pieces already on the board
@@ -443,19 +512,16 @@ function handlePieceClick(e) {
   // Extract the piece ID from the data attribute of the clicked element
   const pieceId = e.target.dataset.id;
 
-  // Clear selection state from all palette pieces
-  document
-    .querySelectorAll(".palette-piece")
-    .forEach((p) => p.classList.remove("selected"));
-  // Clear selection state from all board pieces
-  document
-    .querySelectorAll(".piece:not(.palette-piece)")
-    .forEach((p) => p.classList.remove("selected"));
-
-  // On desktop, remove any ghost piece previews
-  if (!isTouchDevice) {
-    removeGhostPiece();
+  // If delete mode is active, delete the piece immediately
+  if (deleteMode) {
+    socket.emit("removePiece", pieceId);
+    return;
   }
+
+  // Clear selection state from all palette pieces
+  getPalettePieces().forEach((p) => p.classList.remove("selected"));
+  // Clear selection state from all board pieces
+  getBoardPieces().forEach((p) => p.classList.remove("selected"));
 
   // Clear palette selection state
   selectedPaletteType = null;
@@ -492,68 +558,12 @@ function handlePieceClick(e) {
   }
 }
 
-// Function to handle double-clicks on pieces (to delete them)
-function handlePieceDoubleClick(e) {
-  // Stop event from propagating to parent elements
-  e.stopPropagation();
-  // Extract the piece ID from the clicked element's data attribute
-  const pieceId = e.target.dataset.id;
 
-  // Show browser confirmation dialog asking user to confirm deletion
-  if (confirm("Delete this piece?")) {
-    // If user confirms, emit event to server to remove the piece
-    socket.emit("removePiece", pieceId);
-  }
 
-  // Clear any selected piece state
-  selectedPiece = null;
-  // Remove any ghost piece previews
-  removeGhostPiece();
-  // Remove "selected" class from all pieces
-  document
-    .querySelectorAll(".piece")
-    .forEach((p) => p.classList.remove("selected"));
-}
-
-// Function to handle the start of a touch event on a piece (long-press for delete on mobile)
+// Function to handle the start of a touch event on a piece
 function handlePieceTouchStart(e) {
   // Prevent default touch behavior (prevents scrolling, zooming, etc.)
   e.preventDefault();
-  // Try to get piece ID from target element or traverse up to find piece element
-  const pieceId = e.target.dataset.id || e.target.closest(".piece")?.dataset.id;
-  // If no piece ID found, exit early
-  if (!pieceId) return;
-
-  // Remove any existing ghost pieces before starting long-press
-  removeGhostPiece();
-
-  // Store the piece ID that's being long-pressed
-  longPressPieceId = pieceId;
-
-  // Set a timer to trigger after 800ms for long-press detection
-  longPressTimer = setTimeout(() => {
-    // If device supports vibration API, provide haptic feedback
-    if (navigator.vibrate) {
-      navigator.vibrate(50); // Vibrate for 50 milliseconds
-    }
-
-    // Show confirmation dialog to delete the piece
-    if (confirm("Delete this piece?")) {
-      // If confirmed, emit event to server to remove the piece
-      socket.emit("removePiece", pieceId);
-      // Clear selected piece state
-      selectedPiece = null;
-      // Remove any ghost pieces
-      removeGhostPiece();
-      // Remove "selected" class from all pieces
-      document
-        .querySelectorAll(".piece")
-        .forEach((p) => p.classList.remove("selected"));
-    }
-
-    // Clear the long-press piece ID
-    longPressPieceId = null;
-  }, 800); // 800ms long-press threshold
 }
 
 // Function to handle the end of a touch event on a piece (finger lifted)
@@ -563,79 +573,58 @@ function handlePieceTouchEnd(e) {
   // Stop event from bubbling to parent elements
   e.stopPropagation();
 
-  // Remove any ghost piece previews
-  removeGhostPiece();
-
-  // Check if long-press timer is still active (means this was a tap, not a long-press)
-  if (longPressTimer) {
-    // Clear the timeout to prevent long-press action from firing
-    clearTimeout(longPressTimer);
-    // Reset the timer variable
-    longPressTimer = null;
-
-    // Get the piece ID that was tapped
-    const pieceId = longPressPieceId;
-    // Clear the long-press piece ID
-    longPressPieceId = null;
-
-    // If a valid piece was tapped, handle it like a click event
-    if (pieceId) {
+  // Get the piece ID from the touch target
+  const pieceId = e.target.dataset.id || e.target.closest(".piece")?.dataset.id;
+  
+  // If a valid piece was tapped, handle it
+  if (pieceId) {
+    // If delete mode is active, delete the piece immediately
+    if (deleteMode) {
+      socket.emit("removePiece", pieceId);
+      return;
+    }
+    
+    // Handle normal tap behavior
       // Clear selection from all palette pieces
-      document
-        .querySelectorAll(".palette-piece")
-        .forEach((p) => p.classList.remove("selected"));
+      getPalettePieces().forEach((p) => p.classList.remove("selected"));
       // Clear selection from all board pieces
-      document
-        .querySelectorAll(".piece:not(.palette-piece)")
-        .forEach((p) => p.classList.remove("selected"));
+      getBoardPieces().forEach((p) => p.classList.remove("selected"));
 
       // Clear palette selection state
       selectedPaletteType = null;
       selectedPaletteColor = null;
 
-      // Check if tapped piece is already selected (toggle off)
-      if (selectedPiece === pieceId) {
-        // Deselect the piece
+    // Check if tapped piece is already selected (toggle off)
+    if (selectedPiece === pieceId) {
+      // Deselect the piece
+      selectedPiece = null;
+    } else if (selectedPiece) {
+      // If another piece is selected, capture the tapped piece
+      // Find the target piece in board state
+      const targetPiece = boardState.pieces.find((p) => p.id === pieceId);
+      // Verify target exists and is on board
+      if (targetPiece && targetPiece.position !== "offboard") {
+        // Get the target's position
+        const newPosition = targetPiece.position;
+        // Emit event to remove captured piece
+        socket.emit("removePiece", pieceId);
+        // Emit event to move selected piece to target position
+        socket.emit("movePiece", { pieceId: selectedPiece, newPosition });
+        // Clear selected piece
         selectedPiece = null;
-      } else if (selectedPiece) {
-        // If another piece is selected, capture the tapped piece
-        // Find the target piece in board state
-        const targetPiece = boardState.pieces.find((p) => p.id === pieceId);
-        // Verify target exists and is on board
-        if (targetPiece && targetPiece.position !== "offboard") {
-          // Get the target's position
-          const newPosition = targetPiece.position;
-          // Emit event to remove captured piece
-          socket.emit("removePiece", pieceId);
-          // Emit event to move selected piece to target position
-          socket.emit("movePiece", { pieceId: selectedPiece, newPosition });
-          // Clear selected piece
-          selectedPiece = null;
-        }
-      } else {
-        // No piece was selected, so select this piece
-        selectedPiece = pieceId;
-        // Add "selected" class to the piece element
-        e.target.closest(".piece")?.classList.add("selected");
       }
+    } else {
+      // No piece was selected, so select this piece
+      selectedPiece = pieceId;
+      // Add "selected" class to the piece element
+      e.target.closest(".piece")?.classList.add("selected");
     }
-  } else {
-    // Long-press completed, just clear the piece ID
-    longPressPieceId = null;
   }
 }
 
 // Function to handle touch move events (finger dragging on piece)
 function handlePieceTouchMove(e) {
-  // Prevent default touch behavior
-  e.preventDefault();
-  // If long-press timer is active, cancel it (user is scrolling, not long-pressing)
-  if (longPressTimer) {
-    clearTimeout(longPressTimer);
-    longPressTimer = null;
-  }
-  // Clear the long-press piece ID
-  longPressPieceId = null;
+  // Touch move - no action needed, just let it scroll naturally
 }
 
 // Function to handle clicks on board squares (for moving pieces or placing from palette)
@@ -673,11 +662,6 @@ function handleSquareClick(e) {
 
   // Extract the position from the square's data attribute
   const newPosition = targetSquare.dataset.position;
-
-  // On desktop, remove ghost pieces after click
-  if (!isTouchDevice) {
-    removeGhostPiece();
-  }
 
   // Check if user is placing a piece from the palette
   if (selectedPaletteType && selectedPaletteColor) {
@@ -722,94 +706,6 @@ function handleSquareClick(e) {
   document
     .querySelectorAll(".piece")
     .forEach((p) => p.classList.remove("selected"));
-}
-
-// Function to handle mouse hover over squares (for showing ghost piece previews on desktop)
-function handleSquareHover(e) {
-  // Ghost pieces are disabled on touch devices, so exit early
-  if (isTouchDevice) return;
-
-  // Get the target square element (might be the target itself or need to find it)
-  const targetSquare = e.target.classList.contains("square")
-    ? e.target
-    : e.target.closest(".square");
-
-  // If no valid square found, exit early
-  if (!targetSquare) return;
-
-  // Extract the position from the square's data attribute
-  const position = targetSquare.dataset.position;
-
-  // Remove any existing ghost pieces before showing new one
-  removeGhostPiece();
-
-  // Check if user has a palette piece selected
-  if (selectedPaletteType && selectedPaletteColor) {
-    // Find if a piece already exists at this position
-    const existingPiece = boardState.pieces.find(
-      (p) => p.position === position
-    );
-
-    // Only show ghost piece if square is empty
-    if (!existingPiece) {
-      // Show ghost piece preview of the palette selection
-      showGhostPiece(targetSquare, selectedPaletteType, selectedPaletteColor);
-    }
-    // Exit after handling palette ghost
-    return;
-  }
-
-  // Check if user has a board piece selected
-  if (selectedPiece) {
-    // Find the selected piece data in board state
-    const piece = boardState.pieces.find((p) => p.id === selectedPiece);
-    // If piece found, show ghost preview at hover position
-    if (piece) {
-      showGhostPiece(targetSquare, piece.type, piece.color);
-    }
-  }
-}
-
-// Function to handle mouse leaving a square (remove ghost piece preview)
-function handleSquareLeave(e) {
-  // Remove any ghost piece when mouse leaves the square
-  removeGhostPiece();
-}
-
-// Function to create and display a ghost piece preview on a square
-function showGhostPiece(square, type, color) {
-  // Never show ghost pieces on touch devices (prevents visual clutter)
-  if (isTouchDevice) return;
-
-  // Create a new div element for the ghost piece
-  const ghostPieceElement = document.createElement("div");
-  // Add classes for ghost piece styling (includes opacity and pointer-events)
-  ghostPieceElement.className = `piece ghost-piece ${color}`;
-  // Create an img element for the piece image
-  const img = document.createElement("img");
-  // Set the image source to the corresponding SVG file
-  img.src = pieceImages[color][type];
-  // Set alt text for accessibility
-  img.alt = `${color} ${type}`;
-  // Append the image to the ghost piece div
-  ghostPieceElement.appendChild(img);
-
-  // Append the ghost piece to the target square
-  square.appendChild(ghostPieceElement);
-  // Store reference to the ghost piece for later removal
-  ghostPiece = ghostPieceElement;
-}
-
-// Function to remove any ghost piece previews from the board
-function removeGhostPiece() {
-  // If a ghost piece reference exists, remove it from DOM
-  if (ghostPiece) {
-    ghostPiece.remove();
-    // Clear the reference
-    ghostPiece = null;
-  }
-  // Also query for any ghost-piece elements and remove them (fallback cleanup)
-  document.querySelectorAll(".ghost-piece").forEach((el) => el.remove());
 }
 
 // Register Socket.IO event handler for receiving full board state from server

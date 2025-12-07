@@ -223,20 +223,6 @@ h1 {
   box-shadow: inset 0 0 0 3px #667eea;
 }
 
-/* Style rules for ghost pieces (preview pieces on hover) */
-.piece.ghost-piece {
-  /* Set opacity to 50% to show this is a preview */
-  opacity: 0.5;
-  /* Disable pointer events so ghost doesn't interfere with clicks */
-  pointer-events: none;
-}
-
-/* Style rules for SVG elements inside ghost pieces */
-.piece.ghost-piece svg {
-  /* Add subtle drop shadow to ghost pieces */
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-}
-
 /* Style rules for special piece types */
 .piece.special {
   /* Set font size using min() to choose smallest of multiple calculations */
@@ -367,6 +353,43 @@ h1 {
 .palette-piece:hover {
   /* Change border color to purple on hover */
   border-color: #667eea;
+}
+
+/* Style rules for delete mode button */
+.delete-button {
+  /* Red background for delete mode */
+  background: #fee;
+  /* Red border */
+  border-color: #fcc;
+  /* Remove text selection */
+  user-select: none;
+  /* Center icon */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Delete button icon styling */
+.delete-button img {
+  /* Match size with other piece images */
+  width: 85%;
+  height: 85%;
+}
+
+/* Delete button when selected/active */
+.delete-button.selected {
+  /* Darker red background when active */
+  background: #fcc;
+  /* Strong red border */
+  border-color: #f44;
+  /* Red glow effect */
+  box-shadow: 0 0 0 2px #f44;
+}
+
+/* Delete button hover state */
+.delete-button:hover {
+  /* Red border on hover */
+  border-color: #f44;
 }
 
 /* Style rules for status section (contains buttons) */
